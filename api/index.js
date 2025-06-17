@@ -1,3 +1,10 @@
-setInterval(() => {
-  console.log("asd is doing some work...");
-}, 5000);
+const express = require("express");
+
+const port = 8000 || process.env.PORT;
+const app = express();
+
+app.get("/health", (req, res) => {
+  res.send({ status: "ok" });
+});
+
+app.listen(port, () => console.log("listening on", port));
