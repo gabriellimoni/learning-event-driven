@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_container
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db # Persist MongoDB data
+    networks:
+      - app_network
+
+  rabbitmq:
+    image: rabbitmq:3-management # Using the management image for easier monitoring
+    container_name: rabbitmq_container
+    ports:
+      - "5672:5672" # AMQP protocol port
+      - "15672:15672" # RabbitMQ management UI port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq # Persist RabbitMQ data
+    networks:
+      - app_network
+
+  api:
+    build:
+      context: ./api # Specifies the build context (directory for Dockerfile)
+      dockerfile: Dockerfile
+    container_name: api_service
+    ports:
+      - "8000:8000" # Map host port 8000 to container port 8000
+    volumes:
+      - ./api:/app # Mount the local API directory into the container for hot reload
+    depends_on:
+      - mongodb
+      - rabbitmq
+    environment:
+      # Example environment variables, adjust as needed
+      - MONGO_URI=mongodb://mongodb:27017/mydatabase
+      - RABBITMQ_URI=amqp://rabbitmq
+    networks:
+      - app_network
+
+  worker:
+    build:
+      context: ./worker # Specifies the build context (directory for Dockerfile)
+      dockerfile: Dockerfile
+    container_name: worker_service
+    volumes:
+      - ./worker:/app # Mount the local Worker directory into the container for hot reload
+    depends_on:
+      - mongodb
+      - rabbitmq
+    environment:
+      # Example environment variables, adjust as needed
+      - MONGO_URI=mongodb://mongodb:27017/mydatabase
+      - RABBITMQ_URI=amqp://rabbitmq
+    networks:
+      - app_network
+
+volumes:
+  mongo_data: # Define a named volume for MongoDB
+  rabbitmq_data: # Define a named volume for RabbitMQ
+
+networks:
+  app_network: # Define a custom bridge network for services to communicate
+    driver: bridge
