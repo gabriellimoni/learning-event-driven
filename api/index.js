@@ -10,7 +10,7 @@ app.get("/health", (req, res) => {
 });
 
 app.post("/generate-event", express.json(), (req, res) => {
-  sendMessage(exchanges.event.name, req.body.name, req.body);
+  sendMessage(exchanges.event.name, req.body.event, req.body);
   res.status(204).send();
 });
 
