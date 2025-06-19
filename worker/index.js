@@ -1,5 +1,13 @@
+const { webhookQueueName } = require("./config");
+const { connectAndConsume } = require("./setupConsumer");
+
 console.log("Worker Service started.");
-// In a real application, this would connect to RabbitMQ and process messages
-setInterval(() => {
-  console.log("Worker is doing some work...");
-}, 5000);
+
+connectAndConsume(webhookQueueName, async (data) => {
+  return new Promise((res) => {
+    setTimeout(() => {
+      console.log(data);
+      res();
+    }, 5000);
+  });
+});
