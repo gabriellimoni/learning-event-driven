@@ -20,11 +20,35 @@ const connectAndAssert = async () => {
 
         Object.values(exchanges).forEach((exchange) => {
           channel.assertExchange(exchange.name, "topic", {
-            durable: false,
+            durable: true,
           });
           exchange.queueBindings.forEach((queue) => {
+            // DLX begins
+            if (queue.deadLetterExchangeConfig) {
+              channel.assertExchange(
+                queue.deadLetterExchangeConfig.name,
+                "fanout",
+                {
+                  durable: true,
+                }
+              );
+              channel.assertQueue(queue.deadLetterExchangeConfig.queueName, {
+                durable: true,
+                arguments: {
+                  "x-dead-letter-exchange": queue.deadLetterExchangeConfig.name,
+                },
+              });
+              channel.bindQueue(
+                queue.deadLetterExchangeConfig.queueName,
+                queue.deadLetterExchangeConfig.name
+              );
+            }
+            // DLX ends
+
             channel.assertQueue(queue.name, {
-              durable: false,
+              durable: true,
+              deadLetterExchange:
+                queue.deadLetterExchangeConfig?.name || undefined,
             });
             channel.bindQueue(queue.name, exchange.name, queue.routingKey);
           });
